@@ -26,6 +26,10 @@ public class SignInUIOptions {
         return builder.canCancel;
     }
 
+    public boolean noHistory() {
+        return builder.noHistory;
+    }
+
     public Class<? extends Activity> nextActivity() {
         return builder.nextActivityClass;
     }
@@ -42,6 +46,7 @@ public class SignInUIOptions {
         private Integer logo;
         private Integer backgroundColor;
         private boolean canCancel;
+        private boolean noHistory;
         private Class<? extends Activity> nextActivityClass;
         private HostedUIOptions hostedUIOptions;
 
@@ -59,6 +64,11 @@ public class SignInUIOptions {
 
         public Builder canCancel(final boolean canCancel) {
             this.canCancel = canCancel;
+            return this;
+        }
+
+        public Builder noHistory(final boolean noHistory) {
+            this.noHistory = noHistory;
             return this;
         }
 

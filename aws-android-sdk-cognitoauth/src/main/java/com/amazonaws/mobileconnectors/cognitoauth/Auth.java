@@ -649,8 +649,8 @@ public final class Auth {
      *     authentication code.
      * </p>
      */
-    public void getSession() {
-        this.user.getSession(true);
+    public void getSession(boolean noHistory) {
+        this.user.getSession(true, noHistory);
     }
 
     /**
@@ -670,8 +670,8 @@ public final class Auth {
      *     authentication code.
      * </p>
      */
-    public void getSession(final boolean launchWebUIIfExpired) {
-        this.user.getSession(launchWebUIIfExpired);
+    public void getSession(final boolean launchWebUIIfExpired, boolean noHistory) {
+        this.user.getSession(launchWebUIIfExpired, noHistory);
     }
 
     /**

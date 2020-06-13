@@ -1830,7 +1830,7 @@ public final class AWSMobileClient implements AWSCredentialsProvider {
                 callback.onError(new Exception("No cached session.", e));
             }
         });
-        hostedUI.getSession(false);
+        hostedUI.getSession(false, true);
     }
 
     /**
@@ -2966,7 +2966,7 @@ public final class AWSMobileClient implements AWSCredentialsProvider {
                     hostedUIBuilder.setIdpIdentifier(idpIdentifier);
                 }
                 hostedUI = hostedUIBuilder.build();
-                hostedUI.getSession();
+                hostedUI.getSession(signInUIOptions.noHistory());
             }
         };
     }

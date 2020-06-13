@@ -154,7 +154,7 @@ public class AuthClient {
      * </p>
      * @param showSignInIfExpired true if the web UI should launch when the session is expired
      */
-    protected void getSession(final boolean showSignInIfExpired) {
+    protected void getSession(final boolean showSignInIfExpired, boolean noHistory) {
         try {
             proofKey = Pkce.generateRandom();
             proofKeyHash = Pkce.generateHash(proofKey);
@@ -177,7 +177,7 @@ public class AuthClient {
         if (session.getRefreshToken() != null && session.getRefreshToken().getToken() != null) {
             refreshSession(session, pool.getSignInRedirectUri(), pool.getScopes(), userHandler);
         } else if (showSignInIfExpired) {
-            launchCognitoAuth(pool.getSignInRedirectUri(), pool.getScopes());
+            launchCognitoAuth(pool.getSignInRedirectUri(), pool.getScopes(), noHistory);
         } else {
             userHandler.onFailure(new Exception("No cached session"));
         }
@@ -491,12 +491,16 @@ public class AuthClient {
         return  httpBodyParams;
     }
 
+    private void launchCognitoAuth(final String redirectUri, final Set<String> tokenScopes) {
+        launchCognitoAuth(redirectUri, tokenScopes, true);
+    }
+
     /**
      * Creates the FQDM for Cognito's authentication endpoint and launches Cognito Auth web-domain.
      * @param redirectUri Required: The redirect Uri, which will be launched after authentication.
      * @param tokenScopes Required: A {@link Set<String>} specifying all scopes for the tokens.
      */
-    private void launchCognitoAuth(final String redirectUri, final Set<String> tokenScopes) {
+    private void launchCognitoAuth(final String redirectUri, final Set<String> tokenScopes, boolean noHistory) {
         // Build the complete web domain to launch the login screen
         Uri.Builder builder = new Uri.Builder()
                 .scheme(ClientConstants.DOMAIN_SCHEME)
@@ -539,7 +543,7 @@ public class AuthClient {
 
         final Uri fqdn = builder.build();
         LocalDataManager.cacheState(pool.awsKeyValueStore, context, state, proofKey, tokenScopes);
-        launchCustomTabs(fqdn);
+        launchCustomTabs(fqdn, noHistory);
     }
 
     /**
@@ -557,21 +561,33 @@ public class AuthClient {
         launchCustomTabs(fqdn);
     }
 
+    private void launchCustomTabs(final Uri uri) {
+        launchCustomTabs(uri, true);
+    }
+
     /**
      * Launches App's Cognito webpage on Chrome Tab.
      * @param uri Required: {@link Uri}.
      */
-    private void launchCustomTabs(final Uri uri) {
+    private void launchCustomTabs(final Uri uri, boolean noHistory) {
     	try {
             LocalDataManager.cacheHasReceivedRedirect(pool.awsKeyValueStore, context, pool.getAppId(), false);
 
 	        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(mCustomTabsSession);
-	        mCustomTabsIntent = builder.build();
+	        mCustomTabsIntent = builder.
+                   // .setStartAnimations(this, R.anim.slide_in_bottom, 0)
+                    //.setExitAnimations(this, 0,  R.anim.slide_out_bottom).
+                    build();
 	        if(pool.getCustomTabExtras() != null)
 	            mCustomTabsIntent.intent.putExtras(pool.getCustomTabExtras());
 	        mCustomTabsIntent.intent.setPackage(ClientConstants.CHROME_PACKAGE);
-	        mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-	        mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	        if(noHistory) {
+                mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            } else  {
+                mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            }
+
 	        mCustomTabsIntent.launchUrl(context, uri);
     	} catch (final Exception e) {
     		userHandler.onFailure(e);
