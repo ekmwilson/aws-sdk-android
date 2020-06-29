@@ -20,6 +20,7 @@ package com.amazonaws.mobileconnectors.cognitoauth;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -562,20 +563,28 @@ public class AuthClient {
      * @param uri Required: {@link Uri}.
      */
     private void launchCustomTabs(final Uri uri) {
-    	try {
+        try {
             LocalDataManager.cacheHasReceivedRedirect(pool.awsKeyValueStore, context, pool.getAppId(), false);
 
-	        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(mCustomTabsSession);
-	        mCustomTabsIntent = builder.build();
-	        if(pool.getCustomTabExtras() != null)
-	            mCustomTabsIntent.intent.putExtras(pool.getCustomTabExtras());
-	        mCustomTabsIntent.intent.setPackage(ClientConstants.CHROME_PACKAGE);
-	        mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-	        mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	        mCustomTabsIntent.launchUrl(context, uri);
-    	} catch (final Exception e) {
-    		userHandler.onFailure(e);
-    	}
+            CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(mCustomTabsSession);
+            mCustomTabsIntent = builder
+                    .setStartAnimations(context, R.anim.slide_in_bottom, 0)
+                    .setExitAnimations(context, 0,  R.anim.slide_out_bottom)
+                    .enableUrlBarHiding()
+                    .setToolbarColor(Color.BLACK)
+                    .build();
+            if(pool.getCustomTabExtras() != null)
+                mCustomTabsIntent.intent.putExtras(pool.getCustomTabExtras());
+
+            mCustomTabsIntent.intent.setPackage(ClientConstants.CHROME_PACKAGE);
+//	        mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            mCustomTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            mCustomTabsIntent.launchUrl(context, uri);
+        } catch (final Exception e) {
+            userHandler.onFailure(e);
+        }
     }
 
     private String getUserContextData() {
